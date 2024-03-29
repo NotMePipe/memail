@@ -1,0 +1,6 @@
+name: MeMail
+version: '${project.version}'
+main: not.mepipe.memail.Main
+api-version: 1.16
+authors: [ MePipe ]
+description: Adds a simple mail system.

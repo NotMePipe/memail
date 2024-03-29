@@ -1,0 +1,110 @@
+package not.mepipe.memail.managers;
+
+import not.mepipe.memail.Main;
+import not.mepipe.memail.utils.Logger;
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
+
+import java.io.*;
+import java.nio.file.Files;
+import java.util.HashMap;
+import java.util.UUID;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
+
+public class MailManager {
+
+    private static MailManager manager = null;
+
+    private static HashMap<UUID, HashMap<Integer, String>> data = new HashMap<>();
+
+    private final Main plugin = Main.getPlugin();
+
+    public static MailManager getInstance() {
+        if (manager == null) {
+            manager = new MailManager();
+        }
+        return manager;
+    }
+
+    private File getDataFile() {
+        File file = new File(plugin.getDataFolder(), "mail.dat");
+        if (!file.exists()) {
+            Logger.send(Logger.MessageType.INFO, "mail.dat file not found. Attempting to create...");
+            try {
+                if (file.createNewFile()) {
+                    Logger.send(Logger.MessageType.GOOD, "mail.dat file created successfully");
+                }
+            } catch (IOException e) {
+                Logger.send(Logger.MessageType.BAD, "mail.dat file creation failed");
+                Logger.send(e);
+            }
+        } else {
+            Logger.send(Logger.MessageType.GOOD, "mail.dat file found");
+        }
+
+        return file;
+    }
+
+    public void saveMailFile() {
+        File file = getDataFile();
+
+        for(OfflinePlayer p : Bukkit.getOfflinePlayers()) {
+            UUID uuid = p.getUniqueId();
+            if (data.get(uuid) != null) {
+                data.put(uuid, data.get(uuid));
+            }
+        }
+
+        try {
+            ObjectOutputStream output = new ObjectOutputStream(new GZIPOutputStream(Files.newOutputStream(file.toPath())));
+
+            output.writeObject(data);
+            output.flush();
+            output.close();
+            Logger.send(Logger.MessageType.GOOD, "Data saved successfully");
+        } catch(IOException e) {
+            Logger.send(Logger.MessageType.BAD, "Data saving error");
+            Logger.send(e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public void loadMailFile() {
+        File file = getDataFile();
+
+        try {
+            ObjectInputStream input = new ObjectInputStream(new GZIPInputStream(Files.newInputStream(file.toPath())));
+            Object readObject = input.readObject();
+            data = (HashMap<UUID, HashMap<Integer, String>>) readObject;
+
+            input.close();
+            Logger.send(Logger.MessageType.GOOD, "Data loaded successfully");
+        } catch (EOFException ignored) {
+        } catch (Throwable e) {
+            Logger.send(Logger.MessageType.BAD, "Data loading error");
+            Logger.send(e);
+        }
+    }
+
+    public void addMailToPlayer(OfflinePlayer player, int time, String message) {
+        HashMap<Integer, String> map = new HashMap<>();
+        map.put(time, message);
+        data.put(player.getUniqueId(), map);
+    }
+
+    public void clearPlayerMail(OfflinePlayer player) {
+        if (data.get(player.getUniqueId()) != null) {
+            data.remove(player.getUniqueId());
+        }
+    }
+
+    public HashMap<Integer, String> getPlayerMail(OfflinePlayer player) {
+        if (data.get(player.getUniqueId()) != null) {
+            return data.get(player.getUniqueId());
+        } else {
+            return new HashMap<>();
+        }
+    }
+
+}
