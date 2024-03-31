@@ -1,8 +1,9 @@
 package not.mepipe.memail.utils;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class IndexedHashmap<K, V> {
+public class IndexedHashmap<K, V> implements Serializable {
 
     private final ArrayList<Integer> keys = new ArrayList<>();
     private final ArrayList<K> firsts = new ArrayList<>();
@@ -14,18 +15,16 @@ public class IndexedHashmap<K, V> {
         seconds.add(second);
     }
 
-    public void clear() {
-        keys.clear();
-        firsts.clear();
-        seconds.clear();
-    }
-
     public K getFirst(int key) {
         return firsts.get(key);
     }
 
     public V getSecond(int key) {
         return seconds.get(key);
+    }
+
+    public void setSecond(int key, V value) {
+        seconds.set(key, value);
     }
 
     public int size() {

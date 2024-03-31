@@ -1,20 +1,17 @@
 package not.mepipe.memail;
 
+import not.mepipe.memail.commands.MailCommand;
 import not.mepipe.memail.listeners.PlayerJoinListener;
-import org.bukkit.configuration.file.FileConfiguration;
+import not.mepipe.memail.managers.MailManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class Main extends JavaPlugin {
-
-    FileConfiguration config = getConfig();
 
     private static Main plugin;
 
     @Override
     public void onEnable() {
         plugin = this;
-        config.options().copyDefaults(true);
-        saveDefaultConfig();
 
         registerListeners();
         registerManagers();
@@ -26,11 +23,15 @@ public final class Main extends JavaPlugin {
     }
 
     private void registerManagers() {
+        MailManager.getInstance().loadMailFile();
+    }
 
+    public void saveData() {
+        MailManager.getInstance().saveMailFile();
     }
 
     private void registerCommands() {
-
+        new MailCommand();
     }
 
     public static Main getPlugin() {
@@ -39,6 +40,6 @@ public final class Main extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        // Plugin shutdown logic
+        saveData();
     }
 }

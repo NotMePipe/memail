@@ -1,12 +1,13 @@
 package not.mepipe.memail.managers;
 
 import not.mepipe.memail.Main;
+import not.mepipe.memail.utils.IndexedHashmap;
 import not.mepipe.memail.utils.Logger;
-import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 
 import java.io.*;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.UUID;
 import java.util.zip.GZIPInputStream;
@@ -16,7 +17,7 @@ public class MailManager {
 
     private static MailManager manager = null;
 
-    private static HashMap<UUID, HashMap<Integer, String>> data = new HashMap<>();
+    private static HashMap<UUID, IndexedHashmap<String, Boolean>> data = new HashMap<>();
 
     private final Main plugin = Main.getPlugin();
 
@@ -49,13 +50,6 @@ public class MailManager {
     public void saveMailFile() {
         File file = getDataFile();
 
-        for(OfflinePlayer p : Bukkit.getOfflinePlayers()) {
-            UUID uuid = p.getUniqueId();
-            if (data.get(uuid) != null) {
-                data.put(uuid, data.get(uuid));
-            }
-        }
-
         try {
             ObjectOutputStream output = new ObjectOutputStream(new GZIPOutputStream(Files.newOutputStream(file.toPath())));
 
@@ -76,7 +70,7 @@ public class MailManager {
         try {
             ObjectInputStream input = new ObjectInputStream(new GZIPInputStream(Files.newInputStream(file.toPath())));
             Object readObject = input.readObject();
-            data = (HashMap<UUID, HashMap<Integer, String>>) readObject;
+            data = (HashMap<UUID, IndexedHashmap<String, Boolean>>) readObject;
 
             input.close();
             Logger.send(Logger.MessageType.GOOD, "Data loaded successfully");
@@ -87,9 +81,9 @@ public class MailManager {
         }
     }
 
-    public void addMailToPlayer(OfflinePlayer player, int time, String message) {
-        HashMap<Integer, String> map = new HashMap<>();
-        map.put(time, message);
+    public void addMailToPlayer(OfflinePlayer player, String message) {
+        IndexedHashmap<String, Boolean> map = getPlayerMailData(player);
+        map.add(message, true);
         data.put(player.getUniqueId(), map);
     }
 
@@ -99,11 +93,40 @@ public class MailManager {
         }
     }
 
-    public HashMap<Integer, String> getPlayerMail(OfflinePlayer player) {
+    public IndexedHashmap<String, Boolean> getPlayerMailData(OfflinePlayer player) {
         if (data.get(player.getUniqueId()) != null) {
             return data.get(player.getUniqueId());
         } else {
-            return new HashMap<>();
+            return new IndexedHashmap<>();
+        }
+    }
+
+    public ArrayList<String> getPlayerMail(OfflinePlayer player) {
+        IndexedHashmap<String, Boolean> map = getPlayerMailData(player);
+        ArrayList<String> array = new ArrayList<>();
+        for (int i = 0; i < map.size(); i++) {
+            array.add(map.getFirst(i));
+        }
+        return array;
+    }
+
+    public ArrayList<String> getPlayerUnreadMail(OfflinePlayer player) {
+        IndexedHashmap<String, Boolean> map = getPlayerMailData(player);
+        ArrayList<String> array = new ArrayList<>();
+        for (int i = 0; i < map.size(); i++) {
+            if (map.getSecond(i)) {
+                array.add(map.getFirst(i));
+            }
+        }
+        return array;
+    }
+
+    public void markPlayerMailRead(OfflinePlayer player) {
+        IndexedHashmap<String, Boolean> map = getPlayerMailData(player);
+        for (int i = 0; i < map.size(); i++) {
+            if (map.getSecond(i)) {
+                map.setSecond(i, false);
+            }
         }
     }
 
