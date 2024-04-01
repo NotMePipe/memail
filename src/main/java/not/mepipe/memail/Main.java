@@ -2,6 +2,7 @@ package not.mepipe.memail;
 
 import not.mepipe.memail.commands.MailCommand;
 import not.mepipe.memail.listeners.PlayerJoinListener;
+import not.mepipe.memail.listeners.WorldSaveListener;
 import not.mepipe.memail.managers.MailManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -22,6 +23,7 @@ public final class Main extends JavaPlugin {
 
     private void registerListeners() {
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(), this);
+        getServer().getPluginManager().registerEvents(new WorldSaveListener(), this);
     }
 
     private void registerManagers() {
