@@ -9,6 +9,8 @@ public final class Main extends JavaPlugin {
 
     private static Main plugin;
 
+    public static final String name = "MeMail";
+
     @Override
     public void onEnable() {
         plugin = this;
