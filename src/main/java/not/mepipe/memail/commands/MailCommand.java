@@ -6,10 +6,7 @@ import not.mepipe.memail.managers.MailManager;
 import not.mepipe.memail.utils.*;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
-import org.bukkit.command.TabCompleter;
+import org.bukkit.command.*;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -37,6 +34,10 @@ public class MailCommand implements CommandExecutor {
                 options.add("clear");
             } else if (args.length == 2) {
                 if (args[0].equalsIgnoreCase("send")) {
+                    for (OfflinePlayer player : Bukkit.getServer().getOfflinePlayers()) {
+                        options.add(player.getName());
+                    }
+                } else if (args[0].equalsIgnoreCase("read") && sender instanceof ConsoleCommandSender) {
                     for (OfflinePlayer player : Bukkit.getServer().getOfflinePlayers()) {
                         options.add(player.getName());
                     }
@@ -100,6 +101,29 @@ public class MailCommand implements CommandExecutor {
                 sender.sendMessage(ChatComponent.build(senderMessage));
                 return false;
             }
+        } else if (args.length == 2 && sender instanceof ConsoleCommandSender) {
+            OfflinePlayer p = Bukkit.getOfflinePlayer(Objects.requireNonNull(UUIDFetcher.getUUID(args[1])));
+            ArrayList<String> messages = manager.getPlayerMail(p);
+
+            if (!messages.isEmpty()) {
+                for (int i = 0; i < messages.size(); i++) {
+                    TextColor color;
+                    if (manager.getPlayerMailData(p).getSecond(i)) {
+                        color = TextColor.color(85, 255, 85);
+                    } else {
+                        color = TextColor.color(85, 255, 255);
+                    }
+                    senderMessage.add(messages.get(i), color);
+                    if (i != messages.size() - 1) {
+                        senderMessage.add("\n", color);
+                    }
+                }
+            } else {
+                senderMessage.add("You have no mail", TextColor.color(255, 170, 0));
+            }
+
+            sender.sendMessage(ChatComponent.build(senderMessage));
+            return true;
         } else if (args.length > 2) {
             if (args[0].equalsIgnoreCase("send")) {
                 if (!sender.hasPermission("memail.send")) {
